@@ -1,4 +1,42 @@
 import Mailgen from "mailgen";
+import nodemailer from "nodemailer";
+
+const sendEmail = async (options) =>{
+    const mailGenerator = new Mailgen({
+        theme: "default",
+        product: {
+            name: "Project Management",
+            link: "https://mailgen.js/"
+        }
+    })
+
+    const emailTextual = mailGenerator.generatePlaintext(options.mailgenContent);
+
+    const emailHtml = mailGenerator.generate(options.mailgenContent);
+
+    let transporter = nodemailer.createTransport({
+        host: process.env.MAILTRAP_SMTP_HOST,
+        port: process.env.MAILTRAP_SMTP_PORT,
+        auth: {
+            user: process.env.MAILTRAP_SMTP_USER,
+            pass: process.env.MAILTRAP_SMTP_PASS
+        }
+    })
+
+    const mail = {
+        from : "mail.projectmanagement@example.com",
+        to : options.email,
+        subject : options.subject,
+        text : emailTextual,
+        html : emailHtml
+    }
+
+    try{
+        await transporter.sendMail(mail);
+    } catch(error){
+        console.log(error);
+    }
+}
 
 const emailVerificationContent = (username,verificationUrl)=>{
     return {
@@ -31,10 +69,10 @@ const forgotPasswordContent = (username,passwordResetUrl)=>{
                     link: passwordResetUrl
                 },
             },
-            outro: "Need help or have questions? Just reply to this email, we'd love to help."
+             outro: "Need help or have questions? Just reply to this email, we'd love to help."
         },
     };
 };
 
 
-export {emailVerificationContent,forgotPasswordContent};
+export {emailVerificationContent,forgotPasswordContent,sendEmail};
